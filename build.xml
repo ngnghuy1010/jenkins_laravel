@@ -15,18 +15,16 @@
     <!-- (DEFAULT) Target: main                        -->
     <!-- ============================================  -->
     <target name="main" description="Start analyzing our application">
-        <echo msg="Start Build" />
-        
-        <phingCall target="prepare" />
-        <phingCall target="phpunit" />
-        <phingCall target="pdepend" />
-        <phingCall target="phpmd" />
-        <phingCall target="phpcpd" />
-        <phingCall target="phpdoc" />
-        <phingCall target="docblox" />
-        <phingCall target="phpcs" />
-        <phingCall target="phploc" />
-        <phingCall target="phpcb" />
+        <antCall target="prepare" />
+        <antCall target="phpunit" />
+        <antCall target="pdepend" />
+        <antCall target="phpmd" />
+        <antCall target="phpcpd" />
+        <antCall target="phpdoc" />
+        <antCall target="docblox" />
+        <antCall target="phpcs" />
+        <antCall target="phploc" />
+        <antCall target="phpcb" />
         
         <echo msg="Finished Build" />
     </target>

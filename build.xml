@@ -237,18 +237,19 @@
   <property name="phpunit.done" value="true"/>
  </target>
 
- <target name="phpunit-no-coverage"
-         unless="phpunit.done"
-         depends="prepare"
-         description="Run unit tests with PHPUnit (without generating code coverage reports)">
-  <exec executable="${phpunit}" failonerror="true" taskname="phpunit">
-   <arg value="--configuration"/>
-   <arg path="${basedir}/build/phpunit.xml"/>
-   <arg value="--no-coverage"/>
-  </exec>
-
-  <property name="phpunit.done" value="true"/>
- </target>
+ <!-- ============================================  -->
+  <!-- Target: Unit test                             -->
+  <!-- ============================================  -->
+  <target name="phpunit" description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
+      <echo msg="Beginning of the tests" />
+      <exec command="phpunit --bootstrap=${testdir}/bootstrap.php 
+                           --configuration ${testdir}/phpunit.xml 
+                           --log-junit ${builddir}/logs/junit.xml 
+                           --coverage-clover ${builddir}/logs/clover.xml 
+                           --coverage-html ${builddir}/coverage/ 
+                           ${testdir}"
+          />
+  </target>
 
  <target name="phpdox"
          unless="phpdox.done"

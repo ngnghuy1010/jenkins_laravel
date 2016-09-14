@@ -225,18 +225,6 @@
   <property name="phpcpd.done" value="true"/>
  </target>
 
- <target name="phpunit"
-         unless="phpunit.done"
-         depends="prepare"
-         description="Run unit tests with PHPUnit">
-  <exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
-   <arg value="--configuration"/>
-   <arg path="${basedir}/build/phpunit.xml"/>
-  </exec>
-
-  <property name="phpunit.done" value="true"/>
- </target>
-
  <!-- ============================================  -->
   <!-- Target: Unit test                             -->
   <!-- ============================================  -->

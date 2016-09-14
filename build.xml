@@ -1,153 +1,272 @@
-<?xml version="1.0" encoding="utf-8"?>
-<project name="My Project" basedir="." default="main">
-    
-    <property name="builddir" value="build" />
-    <property name="source" value="library/MyLibrary" />
-    <property name="testdir" value="tests" />
-     
-    <fileset id="php-files" dir="${project.basedir}">
-        <include name="**/*.php"/>
-        <exclude name="library/Zend/**"/>
-        <exclude name="tests/**"/>
-    </fileset>
-        
-    <!-- ============================================  -->
-    <!-- (DEFAULT) Target: main                        -->
-    <!-- ============================================  -->
-    <target name="main" description="Start analyzing our application">
-        <antCall target="prepare" />
-        <antCall target="phpunit" />
-        <antCall target="pdepend" />
-        <antCall target="phpmd" />
-        <antCall target="phpcpd" />
-        <antCall target="phpdoc" />
-        <antCall target="docblox" />
-        <antCall target="phpcs" />
-        <antCall target="phploc" />
-        <antCall target="phpcb" />
-        
-        <echo msg="Finished Build" />
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- (DEFAULT) Target: prepare                     -->
-    <!-- ============================================  -->
-    <target name="prepare" >
-        <echo msg="Making directory build" />
-        
-        <delete dir="${builddir}/api" includeemptydirs="true" verbose="true" failonerror="true" />
-        <delete dir="${builddir}/code-browser" includeemptydirs="true" verbose="true" failonerror="true" />
-        <delete dir="${builddir}/coverage" includeemptydirs="true" verbose="true" failonerror="true" />
-        <delete dir="${builddir}/logs" includeemptydirs="true" verbose="true" failonerror="true" />
-        <delete dir="${builddir}/pdepend" includeemptydirs="true" verbose="true" failonerror="true" />
-       
-        <mkdir dir="${builddir}/api"/>
-        <mkdir dir="${builddir}/api/docblox"/>
-        <mkdir dir="${builddir}/code-browser"/>
-        <mkdir dir="${builddir}/coverage"/>
-        <mkdir dir="${builddir}/logs"/>
-        <mkdir dir="${builddir}/pdepend"/>        
-    </target>
-                
-    <!-- ============================================  -->
-    <!-- Target: Unit test                             -->
-    <!-- ============================================  -->
-    <target name="phpunit" description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
-        <echo msg="Beginning of the tests" />
-        <exec command="phpunit --bootstrap=${testdir}/bootstrap.php 
-                             --configuration ${testdir}/phpunit.xml 
-                             --log-junit ${builddir}/logs/junit.xml 
-                             --coverage-clover ${builddir}/logs/clover.xml 
-                             --coverage-html ${builddir}/coverage/ 
-                             ${testdir}"
-            />
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- Target: PHP Depend                            -->
-    <!-- ============================================  -->
-    <target name="pdepend" description="Calculate dependencies of the code base">
-        <exec command="pdepend --jdepend-xml=${builddir}/logs/jdepend.xml 
-                               --jdepend-chart=${builddir}/pdepend/dependencies.svg 
-                               --overview-pyramid=${builddir}/pdepend/overview-pyramid.svg 
-                               --suffix=php
-                               --ignore=library/Zend,tests
-                               ${source}" 
-              escape="false" />
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- Target: PHPMD (Project Mess Detector)         -->
-    <!-- ============================================  -->
-    <target name="phpmd" description="Generate pmd.xml using PHPMD">
-        <phpmd>
-            <fileset refid="php-files"/>
-            <formatter type="xml" outfile="${builddir}/logs/pmd.xml"/>
-        </phpmd>
-    </target>  
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="name-of-project" default="full-build">
+ <!-- By default, we assume all tools to be on the $PATH -->
+ <property name="pdepend" value="pdepend"/>
+ <property name="phpcpd"  value="phpcpd"/>
+ <property name="phpcs"   value="phpcs"/>
+ <property name="phpdox"  value="phpdox"/>
+ <property name="phploc"  value="phploc"/>
+ <property name="phpmd"   value="phpmd"/>
+ <property name="phpunit" value="phpunit"/>
 
-    <!-- ============================================  -->
-    <!-- Target: PHPCPD (Copy/Paste Detector)          -->
-    <!-- ============================================  -->
-    <target name="phpcpd" description="Copy/Paste Detection">
-        <phpcpd>
-            <fileset refid="php-files"/>
-            <formatter type="pmd" outfile="${builddir}/logs/pmd-cpd.xml"/>
-        </phpcpd>
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- Target: PHPCS (PHP Code Sniffer)              -->
-    <!-- ============================================  -->
-    <target name="phpcs" description="Coding Standards Analysis">
-        <exec command="phpcs --standard=MyZend 
-                             --report=checkstyle 
-                             --report-file=${builddir}/logs/checkstyle.xml
-                             --ignore=library/Zend,tests,docs,scripts
-                             --extensions=php
-                             ${source}" 
-              escape="false" />
-    </target>
-      
-    <!-- ============================================  -->
-    <!-- Target: PHPDoc                                -->
-    <!-- ============================================  -->
-    <target name="phpdoc" description="Generate API documentation using PHPDocumentor">
-        <phpdoc title="${project.name} API Documentation"
-              destdir="${builddir}/api"
-              sourcecode="false"
-              output="HTML:Smarty:PHP"
-              quiet="true">
-            <fileset refid="php-files"/>
-        </phpdoc>
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- Target: Docblox                               -->
-    <!-- ============================================  -->
-    <target name="docblox" description="Generate API documentation with DocBlox">
-        <docblox 
-            title="${project.name} API Documentation"
-            destdir="${builddir}/api/docblox">
-            <fileset refid="php-files"/>
-        </docblox>
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- Target: PHPLoc (PHP Lines of Code)              -->
-    <!-- ============================================  -->
-    <target name="phploc" description="Generate phploc.csv">
-        <exec command="phploc --log-csv ${builddir}/logs/phploc.csv ${source} " />
-    </target>
-    
-    <!-- ============================================  -->
-    <!-- Target: PHPCB (PHP Code Browser)              -->
-    <!-- ============================================  -->
-    <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
-        <exec command="phpcb --log    ${builddir}/logs
-              --ignore build,library/Zend,tests,docs
-              --source ${source}
-              --output ${builddir}/code-browser" />
-    </target>   
-    
+ <!-- Use this when the tools are located as PHARs in ${basedir}/build/tools
+ <property name="pdepend" value="${basedir}/build/tools/pdepend.phar"/>
+ <property name="phpcpd"  value="${basedir}/build/tools/phpcpd.phar"/>
+ <property name="phpcs"   value="${basedir}/build/tools/phpcs.phar"/>
+ <property name="phpdox"  value="${basedir}/build/tools/phpdox.phar"/>
+ <property name="phploc"  value="${basedir}/build/tools/phploc.phar"/>
+ <property name="phpmd"   value="${basedir}/build/tools/phpmd.phar"/>
+ <property name="phpunit" value="${basedir}/build/tools/phpunit.phar"/> -->
+
+ <!-- Use this when the tools are managed by Composer in ${basedir}/vendor/bin
+ <property name="pdepend" value="${basedir}/vendor/bin/pdepend"/>
+ <property name="phpcpd"  value="${basedir}/vendor/bin/phpcpd"/>
+ <property name="phpcs"   value="${basedir}/vendor/bin/phpcs"/>
+ <property name="phpdox"  value="${basedir}/vendor/bin/phpdox"/>
+ <property name="phploc"  value="${basedir}/vendor/bin/phploc"/>
+ <property name="phpmd"   value="${basedir}/vendor/bin/phpmd"/>
+ <property name="phpunit" value="${basedir}/vendor/bin/phpunit"/> -->
+
+ <target name="full-build"
+         depends="prepare,static-analysis,phpunit,phpdox,-check-failure"
+         description="Performs static analysis, runs the tests, and generates project documentation"/>
+
+ <target name="full-build-parallel"
+         depends="prepare,static-analysis-parallel,phpunit,phpdox,-check-failure"
+         description="Performs static analysis (executing the tools in parallel), runs the tests, and generates project documentation"/>
+
+ <target name="quick-build"
+         depends="prepare,lint,phpunit-no-coverage"
+         description="Performs a lint check and runs the tests (without generating code coverage reports)"/>
+
+ <target name="static-analysis"
+         depends="lint,phploc-ci,pdepend,phpmd-ci,phpcs-ci,phpcpd-ci"
+         description="Performs static analysis" />
+
+ <!-- Adjust the threadCount attribute's value to the number of CPUs -->
+ <target name="static-analysis-parallel"
+         description="Performs static analysis (executing the tools in parallel)">
+  <parallel threadCount="2">
+   <sequential>
+    <antcall target="pdepend"/>
+    <antcall target="phpmd-ci"/>
+   </sequential>
+   <antcall target="lint"/>
+   <antcall target="phpcpd-ci"/>
+   <antcall target="phpcs-ci"/>
+   <antcall target="phploc-ci"/>
+  </parallel>
+ </target>
+
+ <target name="clean"
+         unless="clean.done"
+         description="Cleanup build artifacts">
+  <delete dir="${basedir}/build/api"/>
+  <delete dir="${basedir}/build/coverage"/>
+  <delete dir="${basedir}/build/logs"/>
+  <delete dir="${basedir}/build/pdepend"/>
+  <delete dir="${basedir}/build/phpdox"/>
+  <property name="clean.done" value="true"/>
+ </target>
+
+ <target name="prepare"
+         unless="prepare.done"
+         depends="clean"
+         description="Prepare for build">
+  <mkdir dir="${basedir}/build/api"/>
+  <mkdir dir="${basedir}/build/coverage"/>
+  <mkdir dir="${basedir}/build/logs"/>
+  <mkdir dir="${basedir}/build/pdepend"/>
+  <mkdir dir="${basedir}/build/phpdox"/>
+  <property name="prepare.done" value="true"/>
+ </target>
+
+ <target name="lint"
+         unless="lint.done"
+         description="Perform syntax check of sourcecode files">
+  <apply executable="php" taskname="lint">
+   <arg value="-l" />
+
+   <fileset dir="${basedir}/src">
+    <include name="**/*.php" />
+    <modified />
+   </fileset>
+
+   <fileset dir="${basedir}/tests">
+    <include name="**/*.php" />
+    <modified />
+   </fileset>
+  </apply>
+
+  <property name="lint.done" value="true"/>
+ </target>
+
+ <target name="phploc"
+         unless="phploc.done"
+         description="Measure project size using PHPLOC and print human readable output. Intended for usage on the command line.">
+  <exec executable="${phploc}" taskname="phploc">
+   <arg value="--count-tests" />
+   <arg path="${basedir}/src" />
+   <arg path="${basedir}/tests" />
+  </exec>
+
+  <property name="phploc.done" value="true"/>
+ </target>
+
+ <target name="phploc-ci"
+         unless="phploc.done"
+         depends="prepare"
+         description="Measure project size using PHPLOC and log result in CSV and XML format. Intended for usage within a continuous integration environment.">
+  <exec executable="${phploc}" taskname="phploc">
+   <arg value="--count-tests" />
+   <arg value="--log-csv" />
+   <arg path="${basedir}/build/logs/phploc.csv" />
+   <arg value="--log-xml" />
+   <arg path="${basedir}/build/logs/phploc.xml" />
+   <arg path="${basedir}/src" />
+   <arg path="${basedir}/tests" />
+  </exec>
+
+  <property name="phploc.done" value="true"/>
+ </target>
+
+ <target name="pdepend"
+         unless="pdepend.done"
+         depends="prepare"
+         description="Calculate software metrics using PHP_Depend and log result in XML format. Intended for usage within a continuous integration environment.">
+  <exec executable="${pdepend}" taskname="pdepend">
+   <arg value="--jdepend-xml=${basedir}/build/logs/jdepend.xml" />
+   <arg value="--jdepend-chart=${basedir}/build/pdepend/dependencies.svg" />
+   <arg value="--overview-pyramid=${basedir}/build/pdepend/overview-pyramid.svg" />
+   <arg path="${basedir}/src" />
+  </exec>
+
+  <property name="pdepend.done" value="true"/>
+ </target>
+
+ <target name="phpmd"
+         unless="phpmd.done"
+         description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
+  <exec executable="${phpmd}" taskname="phpmd">
+   <arg path="${basedir}/src" />
+   <arg value="text" />
+   <arg path="${basedir}/build/phpmd.xml" />
+  </exec>
+
+  <property name="phpmd.done" value="true"/>
+ </target>
+
+ <target name="phpmd-ci"
+         unless="phpmd.done"
+         depends="prepare"
+         description="Perform project mess detection using PHPMD and log result in XML format. Intended for usage within a continuous integration environment.">
+  <exec executable="${phpmd}" taskname="phpmd">
+   <arg path="${basedir}/src" />
+   <arg value="xml" />
+   <arg path="${basedir}/build/phpmd.xml" />
+   <arg value="--reportfile" />
+   <arg path="${basedir}/build/logs/pmd.xml" />
+  </exec>
+
+  <property name="phpmd.done" value="true"/>
+ </target>
+
+ <target name="phpcs"
+         unless="phpcs.done"
+         description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
+  <exec executable="${phpcs}" taskname="phpcs">
+   <arg value="--standard=PSR2" />
+   <arg value="--extensions=php" />
+   <arg value="--ignore=autoload.php" />
+   <arg path="${basedir}/src" />
+   <arg path="${basedir}/tests" />
+  </exec>
+
+  <property name="phpcs.done" value="true"/>
+ </target>
+
+ <target name="phpcs-ci"
+         unless="phpcs.done"
+         depends="prepare"
+         description="Find coding standard violations using PHP_CodeSniffer and log result in XML format. Intended for usage within a continuous integration environment.">
+  <exec executable="${phpcs}" output="/dev/null" taskname="phpcs">
+   <arg value="--report=checkstyle" />
+   <arg value="--report-file=${basedir}/build/logs/checkstyle.xml" />
+   <arg value="--standard=PSR2" />
+   <arg value="--extensions=php" />
+   <arg value="--ignore=autoload.php" />
+   <arg path="${basedir}/src" />
+   <arg path="${basedir}/tests" />
+  </exec>
+
+  <property name="phpcs.done" value="true"/>
+ </target>
+
+ <target name="phpcpd"
+         unless="phpcpd.done"
+         description="Find duplicate code using PHPCPD and print human readable output. Intended for usage on the command line before committing.">
+  <exec executable="${phpcpd}" taskname="phpcpd">
+   <arg path="${basedir}/src" />
+  </exec>
+
+  <property name="phpcpd.done" value="true"/>
+ </target>
+
+ <target name="phpcpd-ci"
+         unless="phpcpd.done"
+         depends="prepare"
+         description="Find duplicate code using PHPCPD and log result in XML format. Intended for usage within a continuous integration environment.">
+  <exec executable="${phpcpd}" taskname="phpcpd">
+   <arg value="--log-pmd" />
+   <arg path="${basedir}/build/logs/pmd-cpd.xml" />
+   <arg path="${basedir}/src" />
+  </exec>
+
+  <property name="phpcpd.done" value="true"/>
+ </target>
+
+ <target name="phpunit"
+         unless="phpunit.done"
+         depends="prepare"
+         description="Run unit tests with PHPUnit">
+  <exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
+   <arg value="--configuration"/>
+   <arg path="${basedir}/build/phpunit.xml"/>
+  </exec>
+
+  <property name="phpunit.done" value="true"/>
+ </target>
+
+ <target name="phpunit-no-coverage"
+         unless="phpunit.done"
+         depends="prepare"
+         description="Run unit tests with PHPUnit (without generating code coverage reports)">
+  <exec executable="${phpunit}" failonerror="true" taskname="phpunit">
+   <arg value="--configuration"/>
+   <arg path="${basedir}/build/phpunit.xml"/>
+   <arg value="--no-coverage"/>
+  </exec>
+
+  <property name="phpunit.done" value="true"/>
+ </target>
+
+ <target name="phpdox"
+         unless="phpdox.done"
+         depends="phploc-ci,phpcs-ci,phpmd-ci"
+         description="Generate project documentation using phpDox">
+  <exec executable="${phpdox}" dir="${basedir}/build" taskname="phpdox"/>
+
+  <property name="phpdox.done" value="true"/>
+ </target>
+
+ <target name="-check-failure">
+  <fail message="PHPUnit did not finish successfully">
+   <condition>
+    <not>
+     <equals arg1="${result.phpunit}" arg2="0"/>
+    </not>
+   </condition>
+  </fail>
+ </target>
 </project>
+

@@ -226,14 +226,13 @@
  </target>
 
   <target name="phpunit" description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
-      <echo msg="Beginning of the tests" />
-      <exec command="phpunit --bootstrap=${testdir}/bootstrap.php 
-                           --configuration ${testdir}/phpunit.xml 
-                           --log-junit ${builddir}/logs/junit.xml 
-                           --coverage-clover ${builddir}/logs/clover.xml 
-                           --coverage-html ${builddir}/coverage/ 
-                           ${testdir}"
-          />
+    <exec command="phpunit --bootstrap=${testdir}/bootstrap.php 
+                         --configuration ${testdir}/phpunit.xml 
+                         --log-junit ${builddir}/logs/junit.xml 
+                         --coverage-clover ${builddir}/logs/clover.xml 
+                         --coverage-html ${builddir}/coverage/ 
+                         ${testdir}"
+        />
   </target>
 
  <target name="phpdox"
